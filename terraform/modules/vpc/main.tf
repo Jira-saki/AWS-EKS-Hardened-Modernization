@@ -117,7 +117,7 @@ resource "aws_route_table_association" "public" {
 # for Private
 resource "aws_route_table_association" "private" {
   count = length(var.availability_zones)
-  subnet_id = aws_subnet.private[*].id
+  subnet_id = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
 
