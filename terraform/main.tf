@@ -17,5 +17,15 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id # get from output of VPC
   private_subnet_ids      = module.vpc.private_subnet_ids  # get from output of VPC
   cluster_name    = "${var.project_name}-cluster"
-
+  node_sg_id = module.security.node_sg_id
 }
+
+# invoke security modules
+module "security" {
+  source = "./modules/security"
+  vpc_id = module.vpc.vpc_id # get from output of VPC
+  project_name    = var.project_name
+}
+
+
+

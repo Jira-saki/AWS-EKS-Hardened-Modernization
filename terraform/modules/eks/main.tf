@@ -7,12 +7,19 @@ resource "aws_eks_cluster" "this" {
     subnet_ids = var.private_subnet_ids
     endpoint_private_access = true # ✅ Hardened: inside VPC only!
     endpoint_public_access = false # ✅ Hardened: no ingress from internet
+    # ✅ เพิ่มบรรทัดนี้ครับ!
+    # นี่คือการบอกว่า "สมอง" (Control Plane) จะใช้กำแพงเมืองชุดนี้คุยกับ "ทหาร" (Nodes)
+    security_group_ids      = [var.node_sg_id]
+
   }
 
   depends_on = [ 
     aws_iam_role_policy_attachment.cluster_policy
   ]
 }
+
+
+
 
 # 2. EKS Node Group (The Soldiers - Bottlerocket Edition)
 resource "aws_eks_node_group" "this" {
@@ -40,3 +47,4 @@ resource "aws_eks_node_group" "this" {
   ]
 
 }
+
