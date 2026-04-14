@@ -3,7 +3,17 @@
 ## 🚀 Overview
 
 Migrating 14 legacy sites (WordPress/Static) from shared hosting to a high-security, immutable AWS EKS platform running Bottlerocket OS.
-Born from the lessons learned in 'The Walking Dead' incident response, this platform serves as the immutable destination for migrating legacy workloads into a zero-trust environment.
+
+## 📜 Context & Background
+
+This project is the direct architectural evolution following the **'The Walking Dead'** incident—a security compromise involving 22 legacy domains on shared hosting.
+
+- **The Problem:** [The-Walking_Dead-22-Domains](https://github.com/Jira-saki/The-Walking_Dead-22-Domains) (EP1)
+- **The Solution:** This Hardened EKS Platform (EP2)
+
+By analyzing the attack vectors from the previous incident (e.g., cross-site contamination, lack of isolation, and manual SSH access), I designed this platform to be **Immutable**, **Zero-SSH**, and **Observable** by default.
+
+---
 
 ## 🏗️ Architecture (Phase 1: Ongoing)
 
