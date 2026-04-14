@@ -3,8 +3,17 @@
 ## 🚀 Overview
 
 Migrating 14 legacy sites (WordPress/Static) from shared hosting to a high-security, immutable AWS EKS platform running Bottlerocket OS.
+Born from the lessons learned in 'The Walking Dead' incident response, this platform serves as the immutable destination for migrating legacy workloads into a zero-trust environment.
 
 ## 🏗️ Architecture (Phase 1: Ongoing)
+
+
+<div align="center">
+  <img src="./assets/EP2-Immutable-Infra-Architecture.png" width="800" alt="EKS Hardened Architecture">
+  <p align="center">
+    <sub><i>Figure 1: Immutable Infrastructure & Runtime Security Architecture for EP2 Platform</i></sub>
+  </p>
+</div>
 
 - **VPC:** 3-Tier Multi-AZ (Public, Private, Data)
 - **Security:** Zero-SSH, Private-only Workloads
@@ -75,3 +84,4 @@ Migrating 14 legacy sites (WordPress/Static) from shared hosting to a high-secur
 │
 └── 📤 (6) [Output] Root outputs.tf
     └── output "vpc_id" = module.vpc.vpc_id # (Shows final VPC ID in terminal)
+`
