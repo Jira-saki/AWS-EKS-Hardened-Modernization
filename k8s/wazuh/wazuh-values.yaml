@@ -1,0 +1,42 @@
+# เปลี่ยนชื่อจาก indexer เป็น wazuh-indexer ตามที่ Chart กำหนด
+wazuh-indexer:
+  image: "wazuh/wazuh-indexer"
+  tag: "4.14.1"  # ใช้ 4.14.1 ตาม Chart ได้เลยครับ Official ตัวนี้มี ARM64 แล้ว!
+  replicas: 1
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+  persistence:
+    size: "100Gi"
+  extraEnvs:
+    - name: "bootstrap.system_call_filter"
+      value: "false"
+
+
+# เปลี่ยนจาก server เป็น wazuh-manager
+wazuh-manager:
+  image: "wazuh/wazuh-manager"
+  tag: "4.14.1"
+  replicas: 1
+  resources:
+    limits:
+      memory: "4Gi"
+  persistence:
+    size: "50Gi"
+
+# เปลี่ยนจาก dashboard เป็น wazuh-dashboard
+wazuh-dashboard:
+  image: "wazuh/wazuh-dashboard"
+  tag: "4.14.1"
+  resources:
+    limits:
+      memory: "2Gi"
+
+# เพิ่มส่วนนี้เข้าไปเพื่อแก้ ErrImagePull ของ Agent
+wazuh-agent:
+  image: "wazuh/wazuh-agent"
+  tag: "4.14.1"

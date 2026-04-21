@@ -1,97 +1,121 @@
-# AWS EKS Hardened Modernization & Security Platform
+![CI/CD](https://img.shields.io/github/actions/workflow/status/Jira-saki/aws-eks-hardened-modernization/ci.yml?label=CI%2FCD&logo=githubactions)
+![Terraform](https://img.shields.io/badge/Terraform-1.x-7B42BC?logo=terraform)
+![AWS EKS](https://img.shields.io/badge/AWS-EKS-FF9900?logo=amazonaws)
+
+# AWS EKS Hardened Modernization & Security Platform (EP2)
 
 ## 🚀 Overview
 
-Migrating 14 legacy sites (WordPress/Static) from shared hosting to a high-security, immutable AWS EKS platform running Bottlerocket OS.
-
-## 📜 Context & Background
-
-This project is the direct architectural evolution following the **'The Walking Dead'** incident—a security compromise involving 22 legacy domains on shared hosting.
-
-- **The Problem:** [The-Walking_Dead-22-Domains](https://github.com/Jira-saki/The-Walking_Dead-22-Domains) (EP1)
-- **The Solution:** This Hardened EKS Platform (EP2)
-
-By analyzing the attack vectors from the previous incident (e.g., cross-site contamination, lack of isolation, and manual SSH access), I designed this platform to be **Immutable**, **Zero-SSH**, and **Observable** by default.
+Migrated 14 legacy web applications (WordPress/Static) from vulnerable shared hosting to a high-security, **Immutable Infrastructure on AWS EKS**, leveraging **Bottlerocket OS** for maximum node-level hardening.
 
 ---
 
-## 🏗️ Architecture (Phase 1: Ongoing)
+## 📜 Background: From "The Walking Dead" to "The Fortress"
 
+This platform is the direct architectural response to **EP1** — a security compromise involving 22 legacy domains on shared hosting caused by cross-site contamination and lack of isolation.
+
+| | |
+|---|---|
+| **The Incident** | [The-Walking_Dead-22-Domains (EP1)](https://github.com/Jira-saki/The-Walking_Dead-22-Domains) |
+| **The Countermeasure** | This Hardened EKS Platform (EP2) |
+
+By analyzing the previous attack vectors (manual SSH access, shared kernels, unmonitored lateral movement), I designed this platform to be **Immutable**, **Zero-SSH**, and **Observable by Default**.
+
+---
+
+## 🏗️ Architecture: The SCS-Infra Blueprint
 
 <div align="center">
-  <img src="./assets/EP2-Immutable-Infra-Architecture.png" width="800" alt="EKS Hardened Architecture">
-  <p align="center">
-    <sub><i>Figure 1: Immutable Infrastructure & Runtime Security Architecture for EP2 Platform</i></sub>
-  </p>
+  <img src="./assets/scs-infra.jpg" width="800" alt="EKS Hardened Architecture">
+  <p><sub><i>Figure 1: Immutable Infrastructure & Runtime Security Architecture — EP2 Platform</i></sub></p>
 </div>
 
-- **VPC:** 3-Tier Multi-AZ (Public, Private, Data)
-- **Security:** Zero-SSH, Private-only Workloads
-- **IaC:** Terraform (Modular)
+---
 
-## 🛡️ Hardened Security Features (Phase 1.2)
+## 🛡️ Core Hardening Strategy
 
-### 🛰️ Data Perimeter & Networking
+### Host-Level Security (Bottlerocket OS)
+- Nodes run on **AWS Bottlerocket** — a purpose-built, container-optimized Linux OS
+- **Zero attack surface:** No SSH, no interactive shell, read-only root filesystem by default
 
-- **S3 Gateway Endpoint:** Private routing to S3 within the VPC — no Internet or NAT traversal, reducing cost and attack surface.
-- **Data Exfiltration Prevention:** Strict VPC Endpoint Policy that:
-  - Allows access only to designated S3 buckets within the AWS Resource Account.
-  - Explicitly denies all cross-account S3 traffic, even if IAM credentials are compromised.
-- **3-Tier Network Isolation:**
-  - `Public` — ALBs & IGW only.
-  - `Private` — EKS Nodes & Workloads (no public IP).
-  - `Data` — Isolated database tier, egress via NAT for patching only.
+### Container & Software Supply Chain
+- **Trivy Scanning** — Integrated into GitHub Actions to scan OCI images before pushing to ECR
+- **IRSA (IAM Roles for Service Accounts)** — Enforces Least Privilege at the Pod level
 
-### 🧩 IaC Design Patterns
+### Data Perimeter & Network Isolation
+- **3-Tier Multi-AZ VPC:** Public (WAF/ALB) → Private (EKS Nodes) → Data (RDS/EFS)
+- **S3 Gateway Endpoints** with strict VPC Endpoint Policies to prevent data exfiltration
+  - Allows access only to designated S3 buckets within the account
+  - Explicitly denies all cross-account S3 traffic, even if IAM credentials are compromised
 
-- **Modular Terraform:** VPC, Endpoints, and Security Groups separated for maintainability.
-- **Identity-based Hardening:** `aws_caller_identity` for dynamic, zero-hardcoded account referencing.
+---
+
+## 🔍 Native SIEM & Observability
+
+| Component | Role |
+|---|---|
+| **Fluent Bit** | Collects & routes app, system, and audit logs to CloudWatch |
+| **Amazon OpenSearch** | Real-time security analytics and incident response (Native SIEM) |
+| **AWS GuardDuty** | Continuous threat detection |
+| **Security Hub** | Centralized compliance posture & automated remediation |
+| **IAM Access Analyzer** | Detects unintended resource exposure |
+
+---
 
 ## 🛠️ Tech Stack
 
-- AWS (EKS, VPC, S3, Bedrock)
-- Terraform
-- Kubernetes (CKA Standards)
+| Layer | Technology |
+|---|---|
+| Compute | AWS EKS — Managed Node Groups w/ Bottlerocket OS |
+| Networking | VPC, ALB, WAFv2, S3 Gateway Endpoint |
+| Security | AWS WAF, KMS, GuardDuty, Trivy, IAM Access Analyzer |
+| Observability | Fluent Bit, CloudWatch, OpenSearch SIEM |
+| IaC | Terraform (Modular Design) |
+| CI/CD | GitHub Actions |
+
+---
+
+## 🧩 Terraform Module Structure
 
 ```text
-# [📂 Project Root]
+📂 Project Root
+├── main.tf          # Orchestrates Network, EKS, and Security Tiers
+├── variables.tf     # Input variables
+├── outputs.tf       # Critical cluster metadata & monitoring endpoints
+├── .github/         # CI/CD — Trivy image scanning & Terraform plan
+└── modules/
+    ├── vpc/         # 3-Tier Multi-AZ network & VPC endpoints
+    ├── eks/         # Bottlerocket node groups & OIDC/IRSA setup
+    ├── security/    # WAFv2, GuardDuty, and Security Hub automation
+    └── logging/     # CloudWatch → OpenSearch (SIEM) pipeline
+```
 
-├── 🧱 (1) [Input] Root variables.tf
-│   └── var.project_name = "hardened-modernization"
-│
-├── 🚀 (2) [Orchestrator] Root main.tf
-│   │
-│   │   # --- Phase 1: Create Network ---
-│   ├──> module "vpc" { source = "./modules/vpc" }
-│   │   │
-│   │   │   # 📂 [modules/vpc/main.tf]
-│   │   │   ├──> [aws_vpc.main] (Creates VPC: ID = vpc-12345)
-│   │   │   └──> [aws_subnet.private[*]] (Creates Subnets: IDs = ["sn-a", "sn-c"])
-│   │   │
-│   │   │   # 📂 [modules/vpc/outputs.tf]
-│   │   └──> output "vpc_id" = aws_vpc.main.id
-│   │   └──> output "private_subnet_ids" = aws_subnet.private[*].id
-│   │
-│   │   # --- Phase 2: Wiring Data (The Bridge) ---
-│   ├──> (3) [Wiring] Data flows via Root main.tf arguments
-│   │   ├── vpc_id             = module.vpc.vpc_id             <-- (Get vpc-12345)
-│   │   ├── private_subnet_ids = module.vpc.private_subnet_ids <-- (Get ["sn-a", "sn-c"])
-│   │   └── cluster_name       = "${var.project_name}-cluster"
-│   │
-│   │   # --- Phase 3: Create Compute ---
-│   └──> module "eks" { source = "./modules/eks" }
-│       │
-│       │   # 📂 [modules/eks/variables.tf]
-│       ├──> (4) [Input] Receives wired data into Module Variables
-│       │   ├── var.vpc_id             <-- Receives vpc-12345
-│       │   ├── var.private_subnet_ids <-- Receives ["sn-a", "sn-c"]
-│       │   └── var.cluster_name       <-- Receives "hardened-modernization-cluster"
-│       │
-│       │   # 📂 [modules/eks/main.tf]
-│       └──> (5) [Compute] Final resources consume variables
-│           ├── [aws_eks_cluster.this] -> Uses: var.private_subnet_ids
-│           └── [aws_eks_node_group.this] -> Uses: var.private_subnet_ids
-│
-└── 📤 (6) [Output] Root outputs.tf
-    └── output "vpc_id" = module.vpc.vpc_id # (Shows final VPC ID in terminal)
-`
+---
+
+## ⚙️ Prerequisites
+
+> _Details will be updated after Terraform coding is complete._
+
+- Terraform `>= 1.x`
+- AWS CLI configured with appropriate permissions
+- `kubectl` installed
+
+---
+
+## 🚦 Getting Started
+
+> _Setup steps will be updated after Terraform coding is complete._
+
+---
+
+## 💡 Key Security Decisions
+
+> _Detailed rationale for each architectural decision will be updated after Terraform coding is complete._
+
+| Decision | Rationale |
+|---|---|
+| Bottlerocket OS | |
+| Zero-SSH Design | |
+| S3 Gateway Endpoint | |
+| IRSA over Node IAM Roles | |
+| Native SIEM with OpenSearch | |
