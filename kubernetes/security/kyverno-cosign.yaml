@@ -1,0 +1,27 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: check-image-signature
+  annotations:
+    policies.kyverno.io/title: Verify Cosign Signature
+    policies.kyverno.io/severity: critical
+spec:
+  validationFailureAction: Enforce
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-signature
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - default
+      verifyImages:
+        - imageReferences:
+            - "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/*"
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: "https://token.actions.githubusercontent.com"
+                    subject: "https://github.com/Jira-saki/AWS-EKS-Hardened-Infrastructure/.github/workflows/ci-devsecops.yml@refs/heads/main"

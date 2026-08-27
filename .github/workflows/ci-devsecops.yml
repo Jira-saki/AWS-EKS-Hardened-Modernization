@@ -1,0 +1,61 @@
+name: DevSecOps CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # สำหรับ AWS OIDC & Cosign Keyless
+  contents: write   # สำหรับ Auto-commit อัปเดต Image Tag ใน GitOps Repo
+  security-events: write
+
+jobs:
+  security-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+
+      - name: Static Security Scan (Trivy FS)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+      # AWS Production Steps (Uncomment เมื่อรันบน AWS)
+      # - name: Configure AWS Credentials (OIDC)
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-ecr-role
+      #     aws-region: us-east-1
+
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+
+      # - name: Build, Scan & Push Image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_TAG: ${{ github.sha }}
+      #   run: |
+      #     docker build -t $ECR_REGISTRY/secure-api:$IMAGE_TAG app/
+      #     trivy image --severity HIGH,CRITICAL --exit-code 1 $ECR_REGISTRY/secure-api:$IMAGE_TAG
+      #     docker push $ECR_REGISTRY/secure-api:$IMAGE_TAG
+      #     cosign sign --yes $ECR_REGISTRY/secure-api:$IMAGE_TAG
+
+      # - name: Update GitOps Kustomize Tag
+      #   run: |
+      #     cd kubernetes/apps/overlays/prod
+      #     kustomize edit set image secure-api=$ECR_REGISTRY/secure-api:${{ github.sha }}
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
+      #     git commit -am "chore(gitops): bump image to ${{ github.sha }}"
+      #     git push
