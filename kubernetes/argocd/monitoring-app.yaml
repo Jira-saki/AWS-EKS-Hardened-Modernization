@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 61.3.1
+    helm:
+      releaseName: monitoring
+      valuesObject:
+        crds:
+          enabled: true
+        alertmanager:
+          alertmanagerSpec:
+            nodeSelector:
+              node-role.kubernetes.io/observability: "true"
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelector: {}
+            podMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelector: {}
+            nodeSelector:
+              node-role.kubernetes.io/observability: "true"
+        grafana:
+          nodeSelector:
+            node-role.kubernetes.io/observability: "true"
+          adminPassword: "admin"
+        kube-state-metrics:
+          nodeSelector:
+            node-role.kubernetes.io/observability: "true"
+        nodeExporter:
+          enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

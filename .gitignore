@@ -4,3 +4,9 @@
 .terraform.lock.hcl
 *.tfvars
 .DS_Store
+network-memo.txt
+todo-list-flow.txt
+cloud-init/*.cfg
+network-memo.txt
+todo-list-flow.txt
+cloud-init/*.cfg
