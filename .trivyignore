@@ -2,3 +2,6 @@
 AWS-0104# Bypass security context rules for local KVM prototyping
 KSV-0014
 KSV-0118
+# Allow default unrestricted egress for EKS worker nodes (upstream terraform-aws-modules requirement)
+AWS-0104
+AVD-AWS-0104
