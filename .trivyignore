@@ -1,2 +1,4 @@
 # Ignore rule AWS-0104 from upstream AWS EKS official module
-AWS-0104
+AWS-0104# Bypass security context rules for local KVM prototyping
+KSV-0014
+KSV-0118
